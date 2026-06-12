@@ -27,6 +27,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "audio_app.h"
+#include "oled_ui.h"
 
 /* USER CODE END Includes */
 
@@ -97,6 +99,8 @@ int main(void)
   MX_SDIO_SD_Init();
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
+  AudioApp_Init();
+  OLED_UI_Init();
 
   /* USER CODE END 2 */
 
@@ -107,6 +111,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    AudioApp_Task();
+    OLED_UI_Task();
+    HAL_Delay(1);
   }
   /* USER CODE END 3 */
 }

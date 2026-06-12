@@ -55,15 +55,8 @@ __weak uint8_t BSP_SD_Init(void)
   }
   /* HAL SD initialization */
   sd_state = HAL_SD_Init(&hsd);
-  /* Configure SD Bus width (4 bits mode selected) */
-  if (sd_state == MSD_OK)
-  {
-    /* Enable wide operation */
-    if (HAL_SD_ConfigWideBusOperation(&hsd, SDIO_BUS_WIDE_4B) != HAL_OK)
-    {
-      sd_state = MSD_ERROR;
-    }
-  }
+  /* Keep the CubeMX 1-bit bus setting. It is enough for audio logging and
+     avoids failing cards/modules that do not have reliable D1-D3 wiring. */
 
   return sd_state;
 }

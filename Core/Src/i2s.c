@@ -93,21 +93,21 @@ void HAL_I2S_MspInit(I2S_HandleTypeDef* i2sHandle)
     */
     GPIO_InitStruct.Pin = GPIO_PIN_2;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF6_I2S2ext;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
     GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_6;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
     GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_9;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -119,9 +119,9 @@ void HAL_I2S_MspInit(I2S_HandleTypeDef* i2sHandle)
     hdma_i2s2_ext_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
     hdma_i2s2_ext_rx.Init.PeriphInc = DMA_PINC_DISABLE;
     hdma_i2s2_ext_rx.Init.MemInc = DMA_MINC_ENABLE;
-    hdma_i2s2_ext_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-    hdma_i2s2_ext_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-    hdma_i2s2_ext_rx.Init.Mode = DMA_NORMAL;
+    hdma_i2s2_ext_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+    hdma_i2s2_ext_rx.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
+    hdma_i2s2_ext_rx.Init.Mode = DMA_CIRCULAR;
     hdma_i2s2_ext_rx.Init.Priority = DMA_PRIORITY_VERY_HIGH;
     hdma_i2s2_ext_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
     if (HAL_DMA_Init(&hdma_i2s2_ext_rx) != HAL_OK)

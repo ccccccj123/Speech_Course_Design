@@ -48,3 +48,5 @@ audio_record_play\main.o: ../Core/Inc/i2c.h
 audio_record_play\main.o: ../Core/Inc/i2s.h
 audio_record_play\main.o: ../Core/Inc/sdio.h
 audio_record_play\main.o: ../Core/Inc/gpio.h
+audio_record_play\main.o: ../Core/Inc/audio_app.h
+audio_record_play\main.o: ../Core/Inc/oled_ui.h
