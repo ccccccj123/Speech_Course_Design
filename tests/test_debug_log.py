@@ -28,6 +28,7 @@ class DebugLogTests(unittest.TestCase):
             "i2s_state",
             "i2s_error",
             "record_start_error",
+            "playback-fx-v12",
         ):
             self.assertIn(text, source)
 

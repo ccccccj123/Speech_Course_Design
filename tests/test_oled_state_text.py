@@ -33,6 +33,14 @@ class OledStateTextTests(unittest.TestCase):
         for digit in range(10):
             self.assertIn(f"glyph_{digit}", source)
 
+    def test_oled_shows_current_effect_mode(self):
+        source = (ROOT / "Core" / "Src" / "oled_ui.c").read_text(encoding="utf-8")
+
+        self.assertIn("AudioApp_GetFxMode", source)
+        self.assertIn("FX:%d", source)
+        self.assertIn("glyph_f", source)
+        self.assertIn("glyph_x", source)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -11,7 +11,7 @@ class AudioRecordMixTests(unittest.TestCase):
         source = (ROOT / "Core" / "Src" / "audio_app.c").read_text(encoding="utf-8")
 
         self.assertIn("AUDIO_RECORD_INPUT_CHANNEL", source)
-        self.assertIn("#define AUDIO_RECORD_INPUT_CHANNEL AUDIO_RECORD_CHANNEL_RIGHT", source)
+        self.assertIn("#define AUDIO_RECORD_INPUT_CHANNEL AUDIO_RECORD_CHANNEL_LEFT", source)
         self.assertIn("select_i2s_record_sample", source)
         self.assertRegex(source, re.compile(r"int16_t\s+left"))
         self.assertRegex(source, re.compile(r"int16_t\s+right"))
@@ -22,6 +22,7 @@ class AudioRecordMixTests(unittest.TestCase):
         source = (ROOT / "Core" / "Src" / "audio_app.c").read_text(encoding="utf-8")
 
         self.assertIn("AUDIO_RECORD_DIGITAL_GAIN", source)
+        self.assertIn("#define AUDIO_RECORD_DIGITAL_GAIN  3U", source)
         self.assertIn("apply_record_gain", source)
         self.assertRegex(
             source,

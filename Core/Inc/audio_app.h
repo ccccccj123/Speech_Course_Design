@@ -16,9 +16,20 @@ typedef enum
   AUDIO_APP_ERROR
 } AudioApp_State;
 
+typedef enum
+{
+  AUDIO_FX_NORMAL = 0,
+  AUDIO_FX_PITCH,
+  AUDIO_FX_ECHO,
+  AUDIO_FX_MIX,
+  AUDIO_FX_SLOW,
+  AUDIO_FX_FILTER
+} AudioFxMode;
+
 void AudioApp_Init(void);
 void AudioApp_Task(void);
 AudioApp_State AudioApp_GetState(void);
+AudioFxMode AudioApp_GetFxMode(void);
 FRESULT AudioApp_GetLastFileResult(void);
 HAL_StatusTypeDef AudioApp_GetLastHalResult(void);
 

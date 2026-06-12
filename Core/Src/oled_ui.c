@@ -320,6 +320,9 @@ static void oled_render_state(AudioApp_State state)
       oled_draw_string(0U, 4U, "PLAY: STOP");
       break;
   }
+
+  snprintf(line, sizeof(line), "FX:%d", (int)AudioApp_GetFxMode());
+  oled_draw_string(0U, 6U, line);
 }
 
 static HAL_StatusTypeDef oled_flush(void)
@@ -368,6 +371,7 @@ static const uint8_t *oled_get_glyph(char ch)
   static const uint8_t glyph_c[OLED_FONT_WIDTH] = {0x3E, 0x41, 0x41, 0x41, 0x22};
   static const uint8_t glyph_d[OLED_FONT_WIDTH] = {0x7F, 0x41, 0x41, 0x22, 0x1C};
   static const uint8_t glyph_e[OLED_FONT_WIDTH] = {0x7F, 0x49, 0x49, 0x49, 0x41};
+  static const uint8_t glyph_f[OLED_FONT_WIDTH] = {0x7F, 0x09, 0x09, 0x09, 0x01};
   static const uint8_t glyph_h[OLED_FONT_WIDTH] = {0x7F, 0x08, 0x08, 0x08, 0x7F};
   static const uint8_t glyph_i[OLED_FONT_WIDTH] = {0x00, 0x41, 0x7F, 0x41, 0x00};
   static const uint8_t glyph_k[OLED_FONT_WIDTH] = {0x7F, 0x08, 0x14, 0x22, 0x41};
@@ -379,6 +383,7 @@ static const uint8_t *oled_get_glyph(char ch)
   static const uint8_t glyph_s[OLED_FONT_WIDTH] = {0x46, 0x49, 0x49, 0x49, 0x31};
   static const uint8_t glyph_t[OLED_FONT_WIDTH] = {0x01, 0x01, 0x7F, 0x01, 0x01};
   static const uint8_t glyph_u[OLED_FONT_WIDTH] = {0x3F, 0x40, 0x40, 0x40, 0x3F};
+  static const uint8_t glyph_x[OLED_FONT_WIDTH] = {0x63, 0x14, 0x08, 0x14, 0x63};
   static const uint8_t glyph_y[OLED_FONT_WIDTH] = {0x07, 0x08, 0x70, 0x08, 0x07};
 
   switch (ch)
@@ -400,6 +405,7 @@ static const uint8_t *oled_get_glyph(char ch)
     case 'C': return glyph_c;
     case 'D': return glyph_d;
     case 'E': return glyph_e;
+    case 'F': return glyph_f;
     case 'H': return glyph_h;
     case 'I': return glyph_i;
     case 'K': return glyph_k;
@@ -411,6 +417,7 @@ static const uint8_t *oled_get_glyph(char ch)
     case 'S': return glyph_s;
     case 'T': return glyph_t;
     case 'U': return glyph_u;
+    case 'X': return glyph_x;
     case 'Y': return glyph_y;
     default: return glyph_space;
   }

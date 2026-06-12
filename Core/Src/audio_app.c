@@ -17,8 +17,12 @@
 #define AUDIO_FILE_NAME        "record.wav"
 #define DEBUG_FILE_NAME        "debug.txt"
 #define DEBUG_LINE_SIZE        96U
-#define DEBUG_FW_TAG           "record-gain-v10"
+#define DEBUG_FW_TAG           "playback-fx-v12"
 #define DEBUG_RAW_WORD_COUNT   16U
+#define AUDIO_FX_MODE_COUNT    ((uint8_t)AUDIO_FX_FILTER + 1U)
+#define AUDIO_FX_DELAY_SAMPLES 1600U
+#define AUDIO_FX_PITCH_STEP_PERCENT 150U
+#define AUDIO_FX_PITCH_MOD_PERIOD   24U
 
 #define AUDIO_DMA_FRAMES_HALF  512U
 #define AUDIO_DMA_FRAMES_TOTAL (AUDIO_DMA_FRAMES_HALF * 2U)
@@ -28,8 +32,8 @@
 #define AUDIO_MONO_HALF_BYTES  (AUDIO_DMA_FRAMES_HALF * sizeof(uint16_t))
 #define AUDIO_RECORD_CHANNEL_LEFT  0U
 #define AUDIO_RECORD_CHANNEL_RIGHT 1U
-#define AUDIO_RECORD_INPUT_CHANNEL AUDIO_RECORD_CHANNEL_RIGHT
-#define AUDIO_RECORD_DIGITAL_GAIN  2U
+#define AUDIO_RECORD_INPUT_CHANNEL AUDIO_RECORD_CHANNEL_LEFT
+#define AUDIO_RECORD_DIGITAL_GAIN  3U
 
 #if ((AUDIO_RECORD_INPUT_CHANNEL != AUDIO_RECORD_CHANNEL_LEFT) && \
      (AUDIO_RECORD_INPUT_CHANNEL != AUDIO_RECORD_CHANNEL_RIGHT))
@@ -92,11 +96,17 @@ static FIL s_audio_file;
 static uint32_t s_recorded_bytes;
 static uint8_t s_stop_after_half;
 static uint8_t s_stop_after_full;
+static AudioFxMode s_fx_mode = AUDIO_FX_NORMAL;
+static uint32_t s_fx_delay_index;
+static uint32_t s_fx_pitch_phase;
+static int16_t s_fx_delay_buffer[AUDIO_FX_DELAY_SAMPLES];
+static int16_t s_fx_filter_last;
 static AudioDebugStats s_debug_stats;
 
 static uint16_t s_i2s_tx_buffer[AUDIO_DMA_WORDS];
 static uint16_t s_i2s_rx_buffer[AUDIO_DMA_WORDS];
 static uint16_t s_mono_buffer[AUDIO_DMA_FRAMES_HALF];
+static uint16_t s_effect_buffer[AUDIO_DMA_FRAMES_HALF];
 
 static volatile uint8_t s_dma_half_ready;
 static volatile uint8_t s_dma_full_ready;
@@ -119,6 +129,15 @@ static void write_record_segment(uint32_t offset_words);
 static uint8_t fill_playback_segment(uint32_t offset_words);
 static uint16_t select_i2s_record_sample(const uint16_t *frame);
 static uint16_t apply_record_gain(uint16_t sample);
+static void cycle_fx_mode(void);
+static void reset_effect_state(void);
+static void apply_playback_effects(uint16_t *samples, uint16_t *output, uint32_t count);
+static void apply_pitch_effect(uint16_t *samples, uint16_t *output, uint32_t count);
+static void apply_echo_effect(uint16_t *samples, uint16_t *output, uint32_t count);
+static void apply_mix_effect(uint16_t *samples, uint16_t *output, uint32_t count);
+static void apply_slow_effect(uint16_t *samples, uint16_t *output, uint32_t count);
+static void apply_filter_effect(uint16_t *samples, uint16_t *output, uint32_t count);
+static uint16_t saturate_i16(int32_t sample);
 static void debug_reset_stats(void);
 static void debug_update_stats(const uint16_t *frame, uint16_t mono);
 static void debug_write_log(const char *event);
@@ -152,7 +171,10 @@ void AudioApp_Init(void)
 
 void AudioApp_Task(void)
 {
-  (void)button_pressed(&s_reserved_key);
+  if ((s_state != AUDIO_APP_RECORDING) && button_pressed(&s_reserved_key))
+  {
+    cycle_fx_mode();
+  }
 
   if (button_pressed(&s_record_key))
   {
@@ -191,6 +213,11 @@ void AudioApp_Task(void)
 AudioApp_State AudioApp_GetState(void)
 {
   return s_state;
+}
+
+AudioFxMode AudioApp_GetFxMode(void)
+{
+  return s_fx_mode;
 }
 
 FRESULT AudioApp_GetLastFileResult(void)
@@ -423,10 +450,12 @@ static void start_playback(void)
 
   memset(s_i2s_tx_buffer, 0, sizeof(s_i2s_tx_buffer));
   memset(s_i2s_rx_buffer, 0, sizeof(s_i2s_rx_buffer));
+  memset(s_effect_buffer, 0, sizeof(s_effect_buffer));
   s_stop_after_half = 0U;
   s_stop_after_full = 0U;
   s_dma_half_ready = 0U;
   s_dma_full_ready = 0U;
+  reset_effect_state();
 
   s_stop_after_half = fill_playback_segment(0U);
   s_stop_after_full = fill_playback_segment(AUDIO_DMA_HALF_WORDS);
@@ -451,6 +480,7 @@ static void stop_playback(void)
   (void)stop_i2s_dma();
   (void)f_close(&s_audio_file);
   memset(s_i2s_tx_buffer, 0, sizeof(s_i2s_tx_buffer));
+  memset(s_effect_buffer, 0, sizeof(s_effect_buffer));
   s_dma_half_ready = 0U;
   s_dma_full_ready = 0U;
   s_stop_after_half = 0U;
@@ -573,17 +603,20 @@ static uint8_t fill_playback_segment(uint32_t offset_words)
   memset(s_mono_buffer, 0, sizeof(s_mono_buffer));
   s_last_file_result = f_read(&s_audio_file,
                               s_mono_buffer,
-                              AUDIO_MONO_HALF_BYTES,
+                              (s_fx_mode == AUDIO_FX_SLOW) ? (AUDIO_MONO_HALF_BYTES / 2U) : AUDIO_MONO_HALF_BYTES,
                               &read_bytes);
-  if ((s_last_file_result != FR_OK) || (read_bytes < AUDIO_MONO_HALF_BYTES))
+  if ((s_last_file_result != FR_OK) ||
+      (read_bytes < ((s_fx_mode == AUDIO_FX_SLOW) ? (AUDIO_MONO_HALF_BYTES / 2U) : AUDIO_MONO_HALF_BYTES)))
   {
     should_stop_after_segment = 1U;
   }
 
+  apply_playback_effects(s_mono_buffer, s_effect_buffer, AUDIO_DMA_FRAMES_HALF);
+
   for (i = 0; i < AUDIO_DMA_FRAMES_HALF; i++)
   {
-    dst[(i * AUDIO_I2S_CHANNELS) + 0U] = s_mono_buffer[i];
-    dst[(i * AUDIO_I2S_CHANNELS) + 1U] = s_mono_buffer[i];
+    dst[(i * AUDIO_I2S_CHANNELS) + 0U] = s_effect_buffer[i];
+    dst[(i * AUDIO_I2S_CHANNELS) + 1U] = s_effect_buffer[i];
   }
 
   return should_stop_after_segment;
@@ -617,6 +650,153 @@ static uint16_t apply_record_gain(uint16_t sample)
   }
 
   return (uint16_t)(int16_t)amplified;
+}
+
+static void cycle_fx_mode(void)
+{
+  uint8_t next_mode = (uint8_t)s_fx_mode + 1U;
+
+  if (next_mode >= AUDIO_FX_MODE_COUNT)
+  {
+    next_mode = 0U;
+  }
+
+  s_fx_mode = (AudioFxMode)next_mode;
+  reset_effect_state();
+}
+
+static void reset_effect_state(void)
+{
+  s_fx_delay_index = 0U;
+  s_fx_pitch_phase = 0U;
+  s_fx_filter_last = 0;
+  memset(s_fx_delay_buffer, 0, sizeof(s_fx_delay_buffer));
+}
+
+static void apply_playback_effects(uint16_t *samples, uint16_t *output, uint32_t count)
+{
+  switch (s_fx_mode)
+  {
+    case AUDIO_FX_PITCH:
+      apply_pitch_effect(samples, output, count);
+      break;
+
+    case AUDIO_FX_ECHO:
+      apply_echo_effect(samples, output, count);
+      break;
+
+    case AUDIO_FX_MIX:
+      apply_mix_effect(samples, output, count);
+      break;
+
+    case AUDIO_FX_SLOW:
+      apply_slow_effect(samples, output, count);
+      break;
+
+    case AUDIO_FX_FILTER:
+      apply_filter_effect(samples, output, count);
+      break;
+
+    case AUDIO_FX_NORMAL:
+    default:
+      memcpy(output, samples, count * sizeof(output[0]));
+      break;
+  }
+}
+
+static void apply_pitch_effect(uint16_t *samples, uint16_t *output, uint32_t count)
+{
+  uint32_t i;
+  uint32_t phase = s_fx_pitch_phase;
+
+  for (i = 0U; i < count; i++)
+  {
+    uint32_t src_index = ((phase + i) * AUDIO_FX_PITCH_STEP_PERCENT) / 100U;
+    int16_t sample;
+
+    if (count != 0U)
+    {
+      src_index %= count;
+    }
+
+    sample = (int16_t)samples[src_index];
+    if ((((phase + i) / AUDIO_FX_PITCH_MOD_PERIOD) & 1U) != 0U)
+    {
+      sample = -sample;
+    }
+
+    output[i] = saturate_i16(((int32_t)sample * 5) / 4);
+  }
+
+  s_fx_pitch_phase = (phase + count) % (AUDIO_FX_PITCH_MOD_PERIOD * 2U);
+}
+
+static void apply_echo_effect(uint16_t *samples, uint16_t *output, uint32_t count)
+{
+  uint32_t i;
+
+  for (i = 0U; i < count; i++)
+  {
+    int16_t sample = (int16_t)samples[i];
+    int16_t delayed = s_fx_delay_buffer[s_fx_delay_index];
+
+    output[i] = saturate_i16((int32_t)sample + ((int32_t)delayed / 2));
+    s_fx_delay_buffer[s_fx_delay_index] = (int16_t)saturate_i16((int32_t)sample + ((int32_t)delayed / 2));
+    s_fx_delay_index = (s_fx_delay_index + 1U) % AUDIO_FX_DELAY_SAMPLES;
+  }
+}
+
+static void apply_mix_effect(uint16_t *samples, uint16_t *output, uint32_t count)
+{
+  uint32_t i;
+
+  for (i = 0U; i < count; i++)
+  {
+    uint32_t second_index = (s_fx_delay_index + (AUDIO_FX_DELAY_SAMPLES / 2U)) % AUDIO_FX_DELAY_SAMPLES;
+    int16_t sample = (int16_t)samples[i];
+    int16_t delayed_one = s_fx_delay_buffer[s_fx_delay_index];
+    int16_t delayed_two = s_fx_delay_buffer[second_index];
+
+    output[i] = saturate_i16((int32_t)sample + ((int32_t)delayed_one / 3) + ((int32_t)delayed_two / 4));
+    s_fx_delay_buffer[s_fx_delay_index] = (int16_t)saturate_i16((int32_t)sample + ((int32_t)delayed_one / 2));
+    s_fx_delay_index = (s_fx_delay_index + 1U) % AUDIO_FX_DELAY_SAMPLES;
+  }
+}
+
+static void apply_slow_effect(uint16_t *samples, uint16_t *output, uint32_t count)
+{
+  uint32_t i;
+
+  for (i = 0U; i < count; i++)
+  {
+    output[i] = samples[i / 2U];
+  }
+}
+
+static void apply_filter_effect(uint16_t *samples, uint16_t *output, uint32_t count)
+{
+  uint32_t i;
+
+  for (i = 0U; i < count; i++)
+  {
+    int16_t sample = (int16_t)samples[i];
+    s_fx_filter_last = (int16_t)(((int32_t)s_fx_filter_last * 3 + sample) / 4);
+    output[i] = (uint16_t)s_fx_filter_last;
+  }
+}
+
+static uint16_t saturate_i16(int32_t sample)
+{
+  if (sample > 32767)
+  {
+    sample = 32767;
+  }
+  else if (sample < -32768)
+  {
+    sample = -32768;
+  }
+
+  return (uint16_t)(int16_t)sample;
 }
 
 static void debug_reset_stats(void)
@@ -717,6 +897,8 @@ static void debug_write_log(const char *event)
   debug_write_line(&debug_file, line);
   snprintf(line, sizeof(line), "record_channel=%s\r\n",
            (AUDIO_RECORD_INPUT_CHANNEL == AUDIO_RECORD_CHANNEL_RIGHT) ? "right" : "left");
+  debug_write_line(&debug_file, line);
+  snprintf(line, sizeof(line), "fx_mode=%d\r\n", (int)s_fx_mode);
   debug_write_line(&debug_file, line);
   snprintf(line, sizeof(line), "hal_result=%d file_result=%d state=%d\r\n",
            (int)s_last_hal_result,
