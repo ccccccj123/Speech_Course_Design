@@ -58,8 +58,16 @@ HAL_StatusTypeDef ES8388_SetVolume(uint8_t volume)
   {
     return HAL_ERROR;
   }
+  if (ES8388_WriteReg(0x2F, value) != HAL_OK)
+  {
+    return HAL_ERROR;
+  }
+  if (ES8388_WriteReg(0x30, value) != HAL_OK)
+  {
+    return HAL_ERROR;
+  }
 
-  return ES8388_WriteReg(0x2F, value);
+  return ES8388_WriteReg(0x31, value);
 }
 
 uint8_t ES8388_GetLastVerifyError(uint8_t *reg, uint8_t *expected, uint8_t *actual)
@@ -99,14 +107,17 @@ HAL_StatusTypeDef ES8388_Init(I2C_HandleTypeDef *hi2c)
     {0x11, 0x00}, /* DACCONTROL2: DAC normal polarity and unmute. */
     {0x17, 0x18}, /* DACCONTROL8: deemphasis off, normal DAC path. */
     {0x18, 0x02}, /* DACCONTROL9: DAC LRCK divider for 256fs clocking. */
+    {0x19, 0x00}, /* DACCONTROL10: DAC unmute. */
     {0x1A, 0x00}, /* DACCONTROL11: left DAC digital volume, 0 dB. */
     {0x1B, 0x00}, /* DACCONTROL12: right DAC digital volume, 0 dB. */
     {0x26, 0x00}, /* DACCONTROL17: mixer normal. */
-    {0x27, 0x90}, /* DACCONTROL18: route LDAC to left output mixer. */
-    {0x2A, 0x90}, /* DACCONTROL20: route RDAC to right output mixer. */
+    {0x27, 0xB8}, /* DACCONTROL18: route LDAC to left output mixer. */
+    {0x2A, 0xB8}, /* DACCONTROL20: route RDAC to right output mixer. */
     {0x2B, 0x80}, /* DACCONTROL21: use ADC LRCK internally for I2S clock alignment. */
-    {0x2E, 0x1E}, /* LOUT volume. */
-    {0x2F, 0x1E}  /* ROUT volume. */
+    {0x2E, 0x21}, /* LOUT1 volume for headphone left. */
+    {0x2F, 0x21}, /* ROUT1 volume for headphone right. */
+    {0x30, 0x21}, /* LOUT2 volume for speaker amp path. */
+    {0x31, 0x21}  /* ROUT2 volume for speaker amp path. */
   };
 
   if (hi2c == 0)
@@ -149,9 +160,16 @@ HAL_StatusTypeDef ES8388_Init(I2C_HandleTypeDef *hi2c)
   (void)verify_reg(0x0C, 0x0C); /* ADC I2S 16-bit format */
   (void)verify_reg(0x0D, 0x02); /* ADC unmute */
   (void)verify_reg(0x10, 0x00); /* ADC normal mode */
+  (void)verify_reg(0x19, 0x00); /* DAC unmute */
   (void)verify_reg(0x1A, 0x00); /* left DAC volume */
   (void)verify_reg(0x1B, 0x00); /* right DAC volume */
+  (void)verify_reg(0x27, 0xB8); /* left DAC output route */
+  (void)verify_reg(0x2A, 0xB8); /* right DAC output route */
   (void)verify_reg(0x2B, 0x80); /* ADC/DAC LRCK alignment */
+  (void)verify_reg(0x2E, 0x21); /* LOUT1 volume */
+  (void)verify_reg(0x2F, 0x21); /* ROUT1 volume */
+  (void)verify_reg(0x30, 0x21); /* LOUT2 volume */
+  (void)verify_reg(0x31, 0x21); /* ROUT2 volume */
 
   return HAL_OK;
 }

@@ -196,7 +196,7 @@ I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h)(0x6A2A71D2)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h)(0x6A2A71D2)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_sd.h)(0x6A2A71D2)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_sdmmc.h)(0x6A2A71D2)
-F (../Core/Src/es8388.c)(0x6A2ACA7B)(--c99 -c --cpu Cortex-M4.fp.sp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../FATFS/Target -I ../FATFS/App -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FatFs/src -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_Audio_Record_Play-IE:\keil\Arm\Packs\ARM\CMSIS\6.1.0\CMSIS\Core\Include-D__UVISION_VERSION="541" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o audio_record_play\es8388.o --omf_browse audio_record_play\es8388.crf --depend audio_record_play\es8388.d)
+F (../Core/Src/es8388.c)(0x6A2B9901)(--c99 -c --cpu Cortex-M4.fp.sp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../FATFS/Target -I ../FATFS/App -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FatFs/src -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_Audio_Record_Play-IE:\keil\Arm\Packs\ARM\CMSIS\6.1.0\CMSIS\Core\Include-D__UVISION_VERSION="541" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o audio_record_play\es8388.o --omf_browse audio_record_play\es8388.crf --depend audio_record_play\es8388.d)
 I (../Core/Inc/es8388.h)(0x6A2AAAE4)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h)(0x6A2A71D2)
 I (../Core/Inc/stm32f4xx_hal_conf.h)(0x6A2A73F1)
@@ -273,7 +273,7 @@ I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_sdmmc.h)(0x6A2A71D2)
 I (../FATFS/Target/bsp_driver_sd.h)(0x6A2A73F0)
 I (E:\keil\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x5D9B348A)
 I (E:\keil\Keil_v5\ARM\ARMCC\include\string.h)(0x5D9B3488)
-F (../Core/Src/audio_app.c)(0x6A2B9102)(--c99 -c --cpu Cortex-M4.fp.sp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../FATFS/Target -I ../FATFS/App -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FatFs/src -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_Audio_Record_Play-IE:\keil\Arm\Packs\ARM\CMSIS\6.1.0\CMSIS\Core\Include-D__UVISION_VERSION="541" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o audio_record_play\audio_app.o --omf_browse audio_record_play\audio_app.crf --depend audio_record_play\audio_app.d)
+F (../Core/Src/audio_app.c)(0x6A2B990C)(--c99 -c --cpu Cortex-M4.fp.sp -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../FATFS/Target -I ../FATFS/App -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FatFs/src -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_Audio_Record_Play-IE:\keil\Arm\Packs\ARM\CMSIS\6.1.0\CMSIS\Core\Include-D__UVISION_VERSION="541" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o audio_record_play\audio_app.o --omf_browse audio_record_play\audio_app.crf --depend audio_record_play\audio_app.d)
 I (../Core/Inc/audio_app.h)(0x6A2A7C0A)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h)(0x6A2A71D2)
 I (../Core/Inc/stm32f4xx_hal_conf.h)(0x6A2A73F1)
