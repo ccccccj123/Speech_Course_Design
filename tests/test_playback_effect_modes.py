@@ -67,6 +67,35 @@ class PlaybackEffectModeTests(unittest.TestCase):
         self.assertRegex(source, re.compile(r"start_playback.*reset_effect_state\(\)", re.S))
         self.assertRegex(source, re.compile(r"cycle_fx_mode.*reset_effect_state\(\)", re.S))
 
+    def test_extra_pc13_mode_records_second_wav_file(self):
+        source = (ROOT / "Core" / "Src" / "audio_app.c").read_text(encoding="utf-8")
+        header = (ROOT / "Core" / "Inc" / "audio_app.h").read_text(encoding="utf-8")
+
+        self.assertIn("AUDIO_FX_RECORD2", header)
+        self.assertIn('#define MIX_FILE_NAME          "mix.wav"', source)
+        self.assertIn("get_record_file_name", source)
+        self.assertRegex(
+            source,
+            re.compile(r"start_recording.*f_open\(&s_audio_file,\s*get_record_file_name\(\)", re.S),
+        )
+
+    def test_mix_effect_reads_and_blends_second_wav_file(self):
+        source = (ROOT / "Core" / "Src" / "audio_app.c").read_text(encoding="utf-8")
+
+        self.assertIn("s_mix_file", source)
+        self.assertIn("s_mix_buffer", source)
+        self.assertRegex(
+            source,
+            re.compile(r"start_playback.*AUDIO_FX_MIX.*f_open\(&s_mix_file,\s*MIX_FILE_NAME,\s*FA_READ\)", re.S),
+        )
+        self.assertIn("ensure_mix_file_open", source)
+        self.assertRegex(source, re.compile(r"apply_mix_effect.*ensure_mix_file_open\(\)", re.S))
+        self.assertRegex(source, re.compile(r"apply_mix_effect.*f_read\(&s_mix_file", re.S))
+        self.assertRegex(
+            source,
+            re.compile(r"\(int32_t\)sample\s*/\s*2\)\s*\+\s*\(\(int32_t\)mix_sample\s*/\s*2"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

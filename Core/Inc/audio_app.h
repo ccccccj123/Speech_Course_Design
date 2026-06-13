@@ -23,7 +23,8 @@ typedef enum
   AUDIO_FX_ECHO,
   AUDIO_FX_MIX,
   AUDIO_FX_SLOW,
-  AUDIO_FX_FILTER
+  AUDIO_FX_FILTER,
+  AUDIO_FX_RECORD2
 } AudioFxMode;
 
 void AudioApp_Init(void);

@@ -41,6 +41,12 @@ class OledStateTextTests(unittest.TestCase):
         self.assertIn("glyph_f", source)
         self.assertIn("glyph_x", source)
 
+    def test_oled_shows_second_recording_mode(self):
+        source = (ROOT / "Core" / "Src" / "oled_ui.c").read_text(encoding="utf-8")
+
+        self.assertIn("AUDIO_FX_RECORD2", source)
+        self.assertIn("REC2", source)
+
 
 if __name__ == "__main__":
     unittest.main()

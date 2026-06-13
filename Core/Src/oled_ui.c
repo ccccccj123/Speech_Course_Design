@@ -321,8 +321,15 @@ static void oled_render_state(AudioApp_State state)
       break;
   }
 
-  snprintf(line, sizeof(line), "FX:%d", (int)AudioApp_GetFxMode());
-  oled_draw_string(0U, 6U, line);
+  if (AudioApp_GetFxMode() == AUDIO_FX_RECORD2)
+  {
+    oled_draw_string(0U, 6U, "REC2");
+  }
+  else
+  {
+    snprintf(line, sizeof(line), "FX:%d", (int)AudioApp_GetFxMode());
+    oled_draw_string(0U, 6U, line);
+  }
 }
 
 static HAL_StatusTypeDef oled_flush(void)
